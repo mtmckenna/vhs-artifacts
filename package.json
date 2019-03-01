@@ -1,0 +1,12 @@
+{
+  "name": "vhs",
+  "version": "1.0.0",
+  "license": "MIT",
+  "scripts": {
+    "start": "python -m SimpleHTTPServer 1234"
+  },
+  "devDependencies": {
+  },
+  "dependencies": {
+  }
+}
