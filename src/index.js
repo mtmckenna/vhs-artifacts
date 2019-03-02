@@ -18,23 +18,29 @@ const cube = new THREE.Mesh(geometry, material);
 const renderPass = new THREE.RenderPass(scene, camera);
 const scanlinesPass = new THREE.ShaderPass(ScanlinesShader);
 const colorBleedPass = new THREE.ShaderPass(ColorBleedShader);
-const copyPass = new THREE.ShaderPass(THREE.CopyShader);
+const vignettePass = new THREE.ShaderPass(VignetteShader);
 const horizBlurPass = new THREE.ShaderPass(THREE.HorizontalBlurShader);
 const vertBlurPass = new THREE.ShaderPass(THREE.VerticalBlurShader);
+const copyPass = new THREE.ShaderPass(THREE.CopyShader);
 const backgroundTexture = new THREE.TextureLoader().load("./images/croissant.png");
 const backgroundMaterial = new THREE.SpriteMaterial({ map: backgroundTexture, color: 0xffffff });
 const backgroundSprite = new THREE.Sprite(backgroundMaterial);
 const maxBackgroundDistance = 1.0;
 const gui = new dat.GUI();
-const passes = [scanlinesPass, colorBleedPass, horizBlurPass, vertBlurPass];
+const passes = [scanlinesPass, colorBleedPass, vignettePass, horizBlurPass, vertBlurPass];
 const rotateSpeed = 0.01;
+const uResolution = new THREE.Vector2(width, height);
 let backgroundMovementSpeed = { x: 0.003, y: 0.003 };
 let composer = new THREE.EffectComposer(renderer);
 
 scanlinesPass.name = "scanlines";
 colorBleedPass.name = "colorBleed";
+vignettePass.name = "vignette";
 horizBlurPass.name = "horizontalBlur";
 vertBlurPass.name = "verticalBlur";
+
+scanlinesPass.uniforms["uResolution"].value = uResolution;
+vignettePass.uniforms["uResolution"].value = uResolution;
 
 const shaderPassConfig = passes.reduce((obj, pass) => {
   obj[pass.name] = true;
