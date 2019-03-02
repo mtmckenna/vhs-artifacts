@@ -6,6 +6,9 @@
 // interlacing - done
 // vignette - done
 // rando noise
+// heart model
+// cables image
+// beat
 
 const width = 320;
 const height = 240;
@@ -13,9 +16,11 @@ const aspectRatio = width / height;
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera( 75, width / height, 0.1, 1000 );
 const renderer = new THREE.WebGLRenderer();
-const geometry = new THREE.BoxGeometry(3, 3, 3);
-const material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
+const geometry = new THREE.BoxGeometry(1.5, 1.5, 1.5);
+const material = new THREE.MeshPhysicalMaterial( { color: 0xff0000 } );
 const cube = new THREE.Mesh(geometry, material);
+const ambientLight = new THREE.AmbientLight(0xffffff);
+const pointLight = new THREE.PointLight(0xffffff);
 const renderPass = new THREE.RenderPass(scene, camera);
 const scanlinesPass = new THREE.ShaderPass(ScanlinesShader);
 const colorBleedPass = new THREE.ShaderPass(ColorBleedShader);
@@ -59,14 +64,17 @@ passes.forEach((pass) => {
 backgroundSprite.scale.set(26, 13, 1);
 backgroundSprite.position.z = -2;
 camera.position.z = 5;
+pointLight.position.x = -1;
+pointLight.position.y = 1;
+pointLight.position.z = 1;
 copyPass.renderToScreen = true;
 scene.add(backgroundSprite);
 scene.add(cube);
+scene.add(ambientLight);
+scene.add(pointLight);
 renderer.setSize(width, height, false);
 document.body.appendChild(canvas);
 document.body.insertBefore(gui.domElement, canvas.nextSibling);
-// canvas.append(gui.domElement);
-// canvas.appendChild(gui.domElement);
 
 configureEffects();
 animate();
@@ -77,6 +85,10 @@ function animate(timestamp) {
   scanlinesPass.uniforms["uTime"].value = timestamp;
   cube.rotation.x += rotateSpeed;
   cube.rotation.y += rotateSpeed;
+  const scale = 1.0 + (Math.sin(timestamp / 800) + 1.0) / 2.0;
+  cube.scale.x = scale;
+  cube.scale.y = scale;
+  cube.scale.z = scale;
 
   if (Math.abs(backgroundSprite.position.x) > maxBackgroundDistance) {
     backgroundMovementSpeed.x = -backgroundMovementSpeed.x;
