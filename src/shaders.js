@@ -27,7 +27,7 @@ uniform float uTime;
 uniform sampler2D tDiffuse;
 varying vec2 vUv;
 
-const float colorOffsetIntensity = 1.3;
+const float colorOffsetIntensity = 2.3;
 
 void main() {
   vec2 offsetR = vec2(0.006 * sin(uTime), 0.0) * colorOffsetIntensity;

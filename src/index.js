@@ -4,7 +4,7 @@
 // tracking bar
 // jitter
 // interlacing
-// vignette
+// vignette - done
 
 const width = 320;
 const height = 240;
