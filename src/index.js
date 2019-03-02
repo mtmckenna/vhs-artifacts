@@ -4,6 +4,7 @@
 // tracking bar
 // jitter
 // interlacing
+// vignette
 
 const width = 320;
 const height = 240;
@@ -31,20 +32,20 @@ let backgroundMovementSpeed = { x: 0.003, y: 0.003 };
 let composer = new THREE.EffectComposer(renderer);
 
 scanlinesPass.name = "scanlines";
-scanlinesPass.activated = false;
 colorBleedPass.name = "colorBleed";
-colorBleedPass.activated = false;
 horizBlurPass.name = "horizontalBlur";
-horizBlurPass.activated = false;
 vertBlurPass.name = "verticalBlur";
-vertBlurPass.activated = false;
 
 const shaderPassConfig = passes.reduce((obj, pass) => {
   obj[pass.name] = true;
   return obj;
 }, {});
 
-passes.forEach((pass) => gui.add(shaderPassConfig, pass.name));
+passes.forEach((pass) => {
+  const controller = gui.add(shaderPassConfig, pass.name);
+  controller.onFinishChange(() => configureEffects());
+});
+
 backgroundSprite.scale.set(26, 13, 1);
 backgroundSprite.position.z = -2;
 camera.position.z = 5;
@@ -54,11 +55,11 @@ scene.add(cube);
 renderer.setSize(width, height);
 document.body.appendChild(renderer.domElement);
 
+configureEffects();
 animate();
 
 function animate(timestamp) {
   requestAnimationFrame(animate);
-  configureEffects();
 
   scanlinesPass.uniforms["uTime"].value = timestamp;
   cube.rotation.x += rotateSpeed;
@@ -79,24 +80,8 @@ function animate(timestamp) {
 }
 
 function configureEffects() {
-  let somethingChanged = false;
-
-  passes
-    .filter((pass) => pass.activated != shaderPassConfig[pass.name])
-    .forEach((pass) => {
-      pass.activated = shaderPassConfig[pass.name];
-      somethingChanged = true;
-    });
-
-  if (somethingChanged) {
-    console.log("Changed a pass config...")
-    composer.reset();
-    composer = new THREE.EffectComposer(renderer);
-
-    composer.addPass(renderPass);
-    passes.filter((pass) => pass.activated).forEach((pass) => composer.addPass(pass));
-    composer.addPass(horizBlurPass);
-    composer.addPass(vertBlurPass);
-    composer.addPass(copyPass);
-  }
+  composer = new THREE.EffectComposer(renderer);
+  composer.addPass(renderPass);
+  passes.filter((pass) => shaderPassConfig[pass.name]).forEach((pass) => composer.addPass(pass));
+  composer.addPass(copyPass);
 }
