@@ -28,10 +28,11 @@ const backgroundTexture = new THREE.TextureLoader().load("./images/croissant.png
 const backgroundMaterial = new THREE.SpriteMaterial({ map: backgroundTexture, color: 0xffffff });
 const backgroundSprite = new THREE.Sprite(backgroundMaterial);
 const maxBackgroundDistance = 1.0;
-const gui = new dat.GUI();
+const gui = new dat.GUI({ autoPlace: false, width: "100%" });
 const passes = [scanlinesPass, colorBleedPass, interlacePass, vignettePass, horizBlurPass, vertBlurPass];
 const rotateSpeed = 0.01;
 const uResolution = new THREE.Vector2(width, height);
+const canvas = renderer.domElement;
 let backgroundMovementSpeed = { x: 0.003, y: 0.003 };
 let composer = new THREE.EffectComposer(renderer);
 
@@ -61,8 +62,11 @@ camera.position.z = 5;
 copyPass.renderToScreen = true;
 scene.add(backgroundSprite);
 scene.add(cube);
-renderer.setSize(width, height);
-document.body.appendChild(renderer.domElement);
+renderer.setSize(width, height, false);
+document.body.appendChild(canvas);
+document.body.insertBefore(gui.domElement, canvas.nextSibling);
+// canvas.append(gui.domElement);
+// canvas.appendChild(gui.domElement);
 
 configureEffects();
 animate();
