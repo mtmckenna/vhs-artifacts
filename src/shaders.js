@@ -16,7 +16,7 @@ varying vec2 vUv;
 
 void main() {
   vec4 color = texture2D(tDiffuse, vUv);
-  float scanline = sin(vUv.y * uResolution.y) * 0.04 * 2.0;
+  float scanline = sin(vUv.y * uResolution.y * 1.4) * 0.04 * 2.0;
   gl_FragColor = color - scanline;
 }
 `;
@@ -61,6 +61,27 @@ void main() {
 }
 `;
 
+// https://www.shadertoy.com/view/4lB3Dc
+const interlaceGlsl = `
+uniform float uTime;
+uniform sampler2D tDiffuse;
+uniform vec2 uResolution;
+varying vec2 vUv;
+
+const float radius = 0.75;
+const float softness = 0.45;
+
+float rand(vec2 co){
+  return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+}
+
+void main() {
+  // vec2 offsetUv = vec2(vUv.x + (rand(vec2(uTime, gl_FragCoord.y)) - 0.5) / 64.0, vUv.y);
+  vec2 offsetUv = vec2(vUv.x + mod(gl_FragCoord.y, 2.0) * .01, vUv.y);
+  gl_FragColor = texture2D(tDiffuse, offsetUv);
+}
+`;
+
 const ScanlinesShader = {
 	uniforms: uniforms(),
 	vertexShader,
@@ -77,6 +98,12 @@ const VignetteShader = {
   uniforms: uniforms(),
 	vertexShader,
 	fragmentShader: vignetteGlsl,
+}
+
+const InterlaceShader = {
+  uniforms: uniforms(),
+	vertexShader,
+	fragmentShader: interlaceGlsl,
 }
 
 function uniforms() {

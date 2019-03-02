@@ -3,8 +3,9 @@
 // static
 // tracking bar
 // jitter
-// interlacing
+// interlacing - done
 // vignette - done
+// rando noise
 
 const width = 320;
 const height = 240;
@@ -18,6 +19,7 @@ const cube = new THREE.Mesh(geometry, material);
 const renderPass = new THREE.RenderPass(scene, camera);
 const scanlinesPass = new THREE.ShaderPass(ScanlinesShader);
 const colorBleedPass = new THREE.ShaderPass(ColorBleedShader);
+const interlacePass = new THREE.ShaderPass(InterlaceShader);
 const vignettePass = new THREE.ShaderPass(VignetteShader);
 const horizBlurPass = new THREE.ShaderPass(THREE.HorizontalBlurShader);
 const vertBlurPass = new THREE.ShaderPass(THREE.VerticalBlurShader);
@@ -27,7 +29,7 @@ const backgroundMaterial = new THREE.SpriteMaterial({ map: backgroundTexture, co
 const backgroundSprite = new THREE.Sprite(backgroundMaterial);
 const maxBackgroundDistance = 1.0;
 const gui = new dat.GUI();
-const passes = [scanlinesPass, colorBleedPass, vignettePass, horizBlurPass, vertBlurPass];
+const passes = [scanlinesPass, colorBleedPass, interlacePass, vignettePass, horizBlurPass, vertBlurPass];
 const rotateSpeed = 0.01;
 const uResolution = new THREE.Vector2(width, height);
 let backgroundMovementSpeed = { x: 0.003, y: 0.003 };
@@ -35,6 +37,7 @@ let composer = new THREE.EffectComposer(renderer);
 
 scanlinesPass.name = "scanlines";
 colorBleedPass.name = "colorBleed";
+interlacePass.name = "interlace";
 vignettePass.name = "vignette";
 horizBlurPass.name = "horizontalBlur";
 vertBlurPass.name = "verticalBlur";
