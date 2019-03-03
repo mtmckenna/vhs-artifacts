@@ -27,11 +27,11 @@ uniform float uTime;
 uniform sampler2D tDiffuse;
 varying vec2 vUv;
 
-const float colorOffsetIntensity = 2.3;
+const float colorOffsetIntensity = 2.2;
 
 void main() {
-  vec2 offsetR = vec2(0.006 * sin(uTime), 0.0) * colorOffsetIntensity;
-  vec2 offsetG = vec2(0.0073 * (cos(uTime * 0.97)), 0.0) * colorOffsetIntensity;
+  vec2 offsetR = vec2(0.006 * sin(uTime / 1000.0), 0.0) * colorOffsetIntensity;
+  vec2 offsetG = vec2(0.0073 * (cos(uTime * 0.97 / 1000.0)), 0.0) * colorOffsetIntensity;
 
   float r = texture2D(tDiffuse, vUv + offsetR).r;
   float g = texture2D(tDiffuse, vUv + offsetG).g;
@@ -68,17 +68,43 @@ uniform sampler2D tDiffuse;
 uniform vec2 uResolution;
 varying vec2 vUv;
 
-const float radius = 0.75;
-const float softness = 0.45;
+float rand(vec2 co){
+  return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+}
+
+void main() {
+  vec2 offsetUv = vec2(vUv.x + mod(gl_FragCoord.y, 1.5) * .01, vUv.y);
+  gl_FragColor = texture2D(tDiffuse, offsetUv);
+}
+`;
+
+// https://www.shadertoy.com/view/4dBGzK
+const jitterGlsl = `
+uniform float uTime;
+uniform sampler2D tDiffuse;
+uniform vec2 uResolution;
+varying vec2 vUv;
 
 float rand(vec2 co){
   return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
 }
 
 void main() {
-  // vec2 offsetUv = vec2(vUv.x + (rand(vec2(uTime, gl_FragCoord.y)) - 0.5) / 64.0, vUv.y);
-  vec2 offsetUv = vec2(vUv.x + mod(gl_FragCoord.y, 2.0) * .01, vUv.y);
-  gl_FragColor = texture2D(tDiffuse, offsetUv);
+	float magnitude = 0.0009;
+
+	vec2 offsetRedUv = vUv;
+	offsetRedUv.x = vUv.x + rand(vec2(uTime * 0.03, vUv.y * 0.42)) * 0.001;
+	offsetRedUv.x += sin(rand(vec2(uTime * 0.2, vUv.y))) * magnitude;
+
+	vec2 offsetGreenUv = vUv;
+	offsetGreenUv.x = vUv.x + rand(vec2(uTime * 0.004, vUv.y * 0.002)) * 0.004;
+	offsetGreenUv.x += sin(uTime * 9.0) * magnitude;
+
+	float r = texture2D(tDiffuse, offsetRedUv).r;
+	float g = texture2D(tDiffuse, offsetGreenUv).g;
+	float b = texture2D(tDiffuse, vUv).b;
+
+	gl_FragColor = vec4(r, g, b, 0);
 }
 `;
 
@@ -104,6 +130,12 @@ const InterlaceShader = {
   uniforms: uniforms(),
 	vertexShader,
 	fragmentShader: interlaceGlsl,
+}
+
+const JitterShader = {
+  uniforms: uniforms(),
+	vertexShader,
+	fragmentShader: jitterGlsl,
 }
 
 function uniforms() {
