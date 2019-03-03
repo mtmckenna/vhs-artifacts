@@ -15,7 +15,7 @@ const width = 320;
 const height = 240;
 const aspectRatio = width / height;
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera( 75, width / height, 0.1, 1000 );
+const camera = new THREE.PerspectiveCamera(75, aspectRatio, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer();
 const geometry = new THREE.BoxGeometry(1.5, 1.5, 1.5);
 const material = new THREE.MeshPhysicalMaterial( { color: 0xff0000 } );
@@ -34,6 +34,8 @@ const copyPass = new THREE.ShaderPass(THREE.CopyShader);
 const backgroundTexture = new THREE.TextureLoader().load("./images/croissant.png");
 const backgroundMaterial = new THREE.SpriteMaterial({ map: backgroundTexture, color: 0xffffff });
 const backgroundSprite = new THREE.Sprite(backgroundMaterial);
+const uResolution = new THREE.Vector2(width, height);
+const canvasWrapper = document.body.getElementsByClassName("canvas-wrapper")[0];
 const maxBackgroundDistance = 1.0;
 const gui = new dat.GUI({ autoPlace: false, width: "100%" });
 const passes = [
@@ -46,7 +48,6 @@ const passes = [
   vertBlurPass
 ];
 const rotateSpeed = 0.01;
-const uResolution = new THREE.Vector2(width, height);
 const canvas = renderer.domElement;
 let backgroundMovementSpeed = { x: 0.003, y: 0.003 };
 let composer = new THREE.EffectComposer(renderer);
@@ -63,7 +64,7 @@ scanlinesPass.uniforms["uResolution"].value = uResolution;
 vignettePass.uniforms["uResolution"].value = uResolution;
 
 const shaderPassConfig = passes.reduce((obj, pass) => {
-  obj[pass.name] = false;
+  obj[pass.name] = true;
   return obj;
 }, {});
 
@@ -84,10 +85,11 @@ scene.add(cube);
 scene.add(ambientLight);
 scene.add(pointLight);
 renderer.setSize(width, height, false);
-document.body.appendChild(canvas);
-document.body.insertBefore(gui.domElement, canvas.nextSibling);
+canvasWrapper.appendChild(canvas);
+document.body.getElementsByClassName("gui-wrapper")[0].append(gui.domElement);
 
 configureEffects();
+resize();
 animate();
 
 function animate(timestamp) {
@@ -123,3 +125,19 @@ function configureEffects() {
   passes.filter((pass) => shaderPassConfig[pass.name]).forEach((pass) => composer.addPass(pass));
   composer.addPass(copyPass);
 }
+
+function resize() {
+  const canvasWrapperWidth = canvasWrapper.clientWidth;
+  const canvasWrapperHeight = canvasWrapper.clientHeight;
+  if (canvasWrapperWidth > canvasWrapperHeight) {
+    canvas.style.height = `${canvasWrapperHeight}px`;
+    canvas.style.width = null;
+  } else {
+    canvas.style.width = `${canvasWrapperWidth}px`;;
+    canvas.style.height = null;
+  }
+}
+
+window.addEventListener("resize", function () {
+  resize()
+});

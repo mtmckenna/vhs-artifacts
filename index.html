@@ -1,17 +1,40 @@
 <html>
+
 <head>
   <style>
-    html, body {
+    html,
+    body {
       background-color: #000;
       margin: 0;
       padding: 0;
     }
-    canvas {
+
+    .canvas-wrapper {
+      flex-grow: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .gui-wrapper {
+      flex-shrink: 0;
+    }
+
+    .whole-thing-wrapper {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
       width: 100%;
     }
   </style>
 </head>
+
 <body>
+  <div class="whole-thing-wrapper">
+    <div class="canvas-wrapper"></div>
+    <div class="gui-wrapper"></div>
+  </div>
+
   <script src="./libs/three.js"></script>
   <script src="./libs/EffectComposer.js"></script>
   <script src="./libs/HorizontalBlurShader.js"></script>
@@ -23,4 +46,5 @@
   <script src="./src/shaders.js"></script>
   <script src="./src/index.js"></script>
 </body>
+
 </html>
