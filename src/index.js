@@ -1,3 +1,4 @@
+
 // scanlines - done
 // color bleed - done
 // static
@@ -19,7 +20,6 @@ const camera = new THREE.PerspectiveCamera(75, aspectRatio, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer();
 const geometry = new THREE.BoxGeometry(1.5, 1.5, 1.5);
 const material = new THREE.MeshPhysicalMaterial( { color: 0xff0000 } );
-const cube = new THREE.Mesh(geometry, material);
 const ambientLight = new THREE.AmbientLight(0xffffff);
 const pointLight = new THREE.PointLight(0xffffff);
 const renderPass = new THREE.RenderPass(scene, camera);
@@ -37,6 +37,7 @@ const backgroundSprite = new THREE.Sprite(backgroundMaterial);
 const uResolution = new THREE.Vector2(width, height);
 const canvasWrapper = document.body.getElementsByClassName("canvas-wrapper")[0];
 const maxBackgroundDistance = 1.0;
+const heartScale = 25;
 const gui = new dat.GUI({ autoPlace: false, width: "100%" });
 const passes = [
   scanlinesPass,
@@ -51,6 +52,13 @@ const rotateSpeed = 0.01;
 const canvas = renderer.domElement;
 let backgroundMovementSpeed = { x: 0.003, y: 0.003 };
 let composer = new THREE.EffectComposer(renderer);
+let model = null;
+
+new THREE.ObjectLoader().load("./models/heart.json", (object) => {
+  const geometry = object.children[0].geometry;
+  model = new THREE.Mesh(geometry, material);
+  scene.add(model);
+});
 
 scanlinesPass.name = "scanlines";
 colorBleedPass.name = "colorBleed";
@@ -81,7 +89,6 @@ pointLight.position.y = 1;
 pointLight.position.z = 1;
 copyPass.renderToScreen = true;
 scene.add(backgroundSprite);
-scene.add(cube);
 scene.add(ambientLight);
 scene.add(pointLight);
 renderer.setSize(width, height, false);
@@ -98,12 +105,6 @@ function animate(timestamp) {
   scanlinesPass.uniforms["uTime"].value = timestamp;
   colorBleedPass.uniforms["uTime"].value = timestamp;
   jitterPass.uniforms["uTime"].value = timestamp;
-  cube.rotation.x += rotateSpeed;
-  cube.rotation.y += rotateSpeed;
-  const scale = 1.0 + (Math.sin(timestamp / 800) + 1.0) / 2.0;
-  cube.scale.x = scale;
-  cube.scale.y = scale;
-  cube.scale.z = scale;
 
   if (Math.abs(backgroundSprite.position.x) > maxBackgroundDistance) {
     backgroundMovementSpeed.x = -backgroundMovementSpeed.x;
@@ -117,6 +118,13 @@ function animate(timestamp) {
   backgroundSprite.position.y += backgroundMovementSpeed.y;
 
   composer.render(timestamp);
+
+  if (!model) return;
+  model.rotation.y += rotateSpeed;
+  const scale = heartScale + (Math.sin(timestamp / 200) + 1.0);
+  model.scale.x = scale;
+  model.scale.y = -scale;
+  model.scale.z = scale;
 }
 
 function configureEffects() {
