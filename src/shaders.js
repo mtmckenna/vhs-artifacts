@@ -11,12 +11,11 @@ void main() {
 const scanlinesGlsl = `
 uniform float uTime;
 uniform sampler2D tDiffuse;
-uniform vec2 uResolution;
 varying vec2 vUv;
 
 void main() {
   vec4 color = texture2D(tDiffuse, vUv);
-  float scanline = sin(vUv.y * uResolution.y * 1.4) * 0.04 * 2.0;
+  float scanline = sin(vUv.y * 800.0) * 0.04 * 2.0;
   gl_FragColor = color - scanline;
 }
 `;
@@ -45,7 +44,6 @@ void main() {
 const vignetteGlsl = `
 uniform float uTime;
 uniform sampler2D tDiffuse;
-uniform vec2 uResolution;
 varying vec2 vUv;
 
 const float radius = 0.75;
@@ -53,7 +51,7 @@ const float softness = 0.45;
 
 void main() {
   vec4 color = texture2D(tDiffuse, vUv);
-	vec2 position = (gl_FragCoord.xy / uResolution.xy) - vec2(0.5);
+	vec2 position = vUv - vec2(0.5);
 	float len = length(position);
 	float vignette = smoothstep(radius, radius - softness, len);
 
@@ -65,12 +63,7 @@ void main() {
 const interlaceGlsl = `
 uniform float uTime;
 uniform sampler2D tDiffuse;
-uniform vec2 uResolution;
 varying vec2 vUv;
-
-float rand(vec2 co){
-  return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
-}
 
 void main() {
   vec2 offsetUv = vec2(vUv.x + mod(gl_FragCoord.y, 1.5) * .01, vUv.y);
@@ -82,7 +75,6 @@ void main() {
 const jitterGlsl = `
 uniform float uTime;
 uniform sampler2D tDiffuse;
-uniform vec2 uResolution;
 varying vec2 vUv;
 
 float rand(vec2 co){
@@ -105,6 +97,47 @@ void main() {
 	float b = texture2D(tDiffuse, vUv).b;
 
 	gl_FragColor = vec4(r, g, b, 0);
+}
+`;
+
+// https://www.shadertoy.com/view/MdffD7
+const noiseGlsl = `
+uniform float uTime;
+uniform vec2 uResolution;
+uniform sampler2D tDiffuse;
+uniform sampler2D uNoise;
+
+varying vec2 vUv;
+
+const float PI = 3.14159265;
+
+float v2random(vec2 uv) {
+  return texture2D(uNoise, mod(uv, vec2(1.0))).x;
+}
+
+float when_lt(float x, float y) {
+  return max(sign(y - x), 0.0);
+}
+
+void main() {
+  vec4 color = texture2D(tDiffuse, vUv);
+  vec3 noise = vec3(0.0, 0.0, 0.0);
+  float tcPhase = smoothstep(0.9, 0.96, sin(vUv.y * 8.0 - (uTime + 0.14 * v2random(uTime * vec2(0.67, 0.59))) * PI * 1.2));
+  float tcNoise = smoothstep(0.3, 1.0, v2random(vec2(vUv.y * 4.77, uTime)));
+  float cn = tcNoise * (0.8 + 0.7 * tcPhase);
+  vec2 V = vec2(0.0, 1.0);
+
+  vec2 uvt = (vUv + V.yx * v2random(vec2(vUv.y, uTime))) * vec2(0.1, 1.0);
+  float n0 = v2random(uvt);
+  float n1 = v2random(uvt + V.yx / uResolution.x);
+  noise = mix(noise, 2.0 * V.yyy, pow(n0, 10.0)) * when_lt(0.29, cn);
+
+  gl_FragColor = vec4(
+    min(1.0, noise.r + color.r),
+    min(1.0, noise.g + color.g),
+    min(1.0, noise.b + color.b),
+    1.0
+    );
 }
 `;
 
@@ -138,9 +171,16 @@ const JitterShader = {
 	fragmentShader: jitterGlsl,
 }
 
+const NoiseShader = {
+  uniforms: uniforms(),
+	vertexShader,
+	fragmentShader: noiseGlsl,
+}
+
 function uniforms() {
   return {
     tDiffuse: new THREE.Uniform(new THREE.Texture()),
+    uNoise: new THREE.Uniform(new THREE.Texture()),
     uTime: new THREE.Uniform(new Number()),
     uResolution: new THREE.Uniform(new THREE.Vector2()),
   };

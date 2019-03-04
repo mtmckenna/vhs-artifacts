@@ -1,16 +1,16 @@
 
 // scanlines - done
 // color bleed - done
-// static
-// tracking bar
+// tracking bar - sorta
 // jitter - done
 // interlacing - done
 // vignette - done
 // busted colors
-// rando noise
-// heart model
-// cables image
+// rando noise - sorta
+// heart model - done
+// cables image - done
 // beat - doneish
+// artifacts at the bottom
 
 const width = 320;
 const height = 240;
@@ -27,13 +27,18 @@ const scanlinesPass = new THREE.ShaderPass(ScanlinesShader);
 const colorBleedPass = new THREE.ShaderPass(ColorBleedShader);
 const jitterPass = new THREE.ShaderPass(JitterShader);
 const interlacePass = new THREE.ShaderPass(InterlaceShader);
+const noisePass = new THREE.ShaderPass(NoiseShader);
 const vignettePass = new THREE.ShaderPass(VignetteShader);
 const horizBlurPass = new THREE.ShaderPass(THREE.HorizontalBlurShader);
 const vertBlurPass = new THREE.ShaderPass(THREE.VerticalBlurShader);
 const copyPass = new THREE.ShaderPass(THREE.CopyShader);
-const backgroundTexture = new THREE.TextureLoader().load("./images/croissant.png");
+
+// https://www.pexels.com/photo/metal-panels-pipes-steel-208593/
+const backgroundTexture = new THREE.TextureLoader().load("./images/machine.png");
 const backgroundMaterial = new THREE.SpriteMaterial({ map: backgroundTexture, color: 0xffffff });
 const backgroundSprite = new THREE.Sprite(backgroundMaterial);
+// https://www.shadertoy.com/view/XttfWH
+const noiseTexture = new THREE.TextureLoader().load("./images/noise.png");
 const uResolution = new THREE.Vector2(width, height);
 const canvasWrapper = document.body.getElementsByClassName("canvas-wrapper")[0];
 const maxBackgroundDistance = 1.0;
@@ -44,9 +49,10 @@ const passes = [
   colorBleedPass,
   jitterPass,
   interlacePass,
-  vignettePass,
   horizBlurPass,
-  vertBlurPass
+  vertBlurPass,
+  noisePass,
+  vignettePass,
 ];
 const rotateSpeed = 0.01;
 const canvas = renderer.domElement;
@@ -63,18 +69,19 @@ new THREE.ObjectLoader().load("./models/heart.json", (object) => {
 scanlinesPass.name = "scanlines";
 colorBleedPass.name = "colorBleed";
 jitterPass.name = "jitter";
-interlacePass.name = "interlace";
+interlacePass.name = "interlace"
+noisePass.name = "noise";
 vignettePass.name = "vignette";
 horizBlurPass.name = "horizontalBlur";
 vertBlurPass.name = "verticalBlur";
-
-scanlinesPass.uniforms["uResolution"].value = uResolution;
-vignettePass.uniforms["uResolution"].value = uResolution;
 
 const shaderPassConfig = passes.reduce((obj, pass) => {
   obj[pass.name] = true;
   return obj;
 }, {});
+
+noisePass.uniforms["uNoise"].value = noiseTexture;
+noisePass.uniforms["uResolution"].value = uResolution;
 
 passes.forEach((pass) => {
   const controller = gui.add(shaderPassConfig, pass.name);
@@ -86,7 +93,7 @@ backgroundSprite.position.z = -2;
 camera.position.z = 5;
 pointLight.position.x = -1;
 pointLight.position.y = 1;
-pointLight.position.z = 1;
+pointLight.position.z = 3;
 copyPass.renderToScreen = true;
 scene.add(backgroundSprite);
 scene.add(ambientLight);
@@ -105,6 +112,7 @@ function animate(timestamp) {
   scanlinesPass.uniforms["uTime"].value = timestamp;
   colorBleedPass.uniforms["uTime"].value = timestamp;
   jitterPass.uniforms["uTime"].value = timestamp;
+  noisePass.uniforms["uTime"].value = timestamp;
 
   if (Math.abs(backgroundSprite.position.x) > maxBackgroundDistance) {
     backgroundMovementSpeed.x = -backgroundMovementSpeed.x;
@@ -146,6 +154,4 @@ function resize() {
   }
 }
 
-window.addEventListener("resize", function () {
-  resize()
-});
+window.addEventListener("resize", () => resize());
