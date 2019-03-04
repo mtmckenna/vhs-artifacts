@@ -46,8 +46,8 @@ uniform float uTime;
 uniform sampler2D tDiffuse;
 varying vec2 vUv;
 
-const float radius = 0.75;
-const float softness = 0.45;
+const float radius = 0.7;
+const float softness = 0.2;
 
 void main() {
   vec4 color = texture2D(tDiffuse, vUv);
